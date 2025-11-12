@@ -1,8 +1,10 @@
 {
-  "name": "gac",
+  "name": "gac-landing",
   "version": "1.0.0",
+  "description": "Landing page for gac npm package",
   "type": "module",
   "author": "Klea Merkuri",
+  "repository": "https://github.com/thehelpfultipper/gac",
   "scripts": {
     "dev": "vite --open",
     "build": "vite build",
