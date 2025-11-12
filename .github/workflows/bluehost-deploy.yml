@@ -1,0 +1,49 @@
+name: Deploy Gac Landing to Bluehost
+
+on:
+  workflow_dispatch: # manual trigger
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v5
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v6
+        with:
+          node-version: '20'
+
+      - name: Cache npm dependencies
+        uses: actions/cache@v4
+        id: npm-cache
+        with:
+          path: |
+            ~/.npm
+            node_modules
+          key: ${{ runner.os }}-node-${{ hashFiles('**/package-lock.json') }}
+          restore-keys: |
+            ${{ runner.os }}-node-
+
+      - name: Install dependencies
+        if: steps.npm-cache.outputs.cache-hit != 'true'
+        run: npm ci
+
+      - name: Build Gac landing page
+        run: npm run build
+
+      - name: Deploy to Bluehost via FTP
+        uses: SamKirkland/FTP-Deploy-Action@v4.3.6
+        with:
+          server: ${{ secrets.FTP_SERVER }}
+          username: ${{ secrets.FTP_USERNAME }}
+          password: ${{ secrets.FTP_PASSWORD }}
+          local-dir: ./dist/
+          server-dir: /gac/
+          dangerous-clean-slate: true # set to true to delete old files
+          exclude: |
+            **/.git*
+            **/.git*/**
+            **/node_modules/**
