@@ -1,0 +1,5 @@
+{
+  "name": "gac - Git Auto Commit",
+  "description": "A promotional website for gac, a smart, succinct Git commit message generator that is free and local-first.",
+  "requestFramePermissions": []
+}
