@@ -1,4 +1,5 @@
 import React from "react";
+import { ExternalLink } from "./icons/ExternalLink";
 
 const Header: React.FC = () => {
   return (
@@ -38,6 +39,15 @@ const Header: React.FC = () => {
                 className="text-panda-fg hover:bg-panda-bg-light hover:text-white px-3 py-2 rounded-md text-sm font-medium"
               >
                 Changelog
+              </a>
+              <a
+                href="https://www.npmjs.com/package/@thehelpfultipper/gac"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-panda-fg hover:bg-panda-bg-light hover:text-white px-3 py-2 rounded-md text-sm font-medium flex items-center"
+              >
+                NPM
+                <ExternalLink className="h-4 w-4 ml-1" />
               </a>
             </div>
           </nav>

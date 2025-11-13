@@ -12,13 +12,24 @@ const Hero: React.FC = () => {
         <strong>free & local-first</strong>
       </p>
       <div className="mt-8 flex justify-center">
-        <div className="max-w-md w-full">
+        <div className="max-w-md w-full text-center">
           <CodeBlock
             language="bash"
-            code="npx gac"
+            code="npx @thehelpfultipper/gac"
           />
           <p className="mt-2 text-sm text-panda-fg-muted">
-            Try without installing
+            Try it now without installing
+          </p>
+          <p className="mt-4 text-sm text-panda-fg-dim">
+            Or install globally via{" "}
+            <a
+              href="https://www.npmjs.com/package/@thehelpfultipper/gac"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-panda-pink-light font-medium underline hover:text-white transition-colors"
+            >
+              npm
+            </a>
           </p>
         </div>
       </div>

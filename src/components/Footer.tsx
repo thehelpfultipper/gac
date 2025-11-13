@@ -5,6 +5,24 @@ const Footer: React.FC = () => {
   return (
     <footer className="bg-panda-bg border-t border-panda-border">
       <div className="container mx-auto py-6 px-4 sm:px-6 lg:px-8 text-center text-panda-fg-muted">
+        <div className="flex justify-center space-x-6 mb-4">
+          <a
+            href="https://github.com/thehelpfultipper/gac-package"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="hover:text-panda-pink-light transition-colors"
+          >
+            GitHub
+          </a>
+          <a
+            href="https://www.npmjs.com/package/@thehelpfultipper/gac"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="hover:text-panda-pink-light transition-colors"
+          >
+            NPM
+          </a>
+        </div>
         <p>
           &copy; {currentYear} gac by{" "}
           <a
