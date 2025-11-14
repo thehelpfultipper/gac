@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect, useRef } from "react";
 
 const commitSets = [
   [
@@ -46,42 +46,241 @@ const commitSets = [
   ],
 ];
 
-const InteractiveDemo: React.FC = () => {
-  const [messages, setMessages] = useState(commitSets[0]);
-  const [selected, setSelected] = useState<number | null>(null);
-  const [prefix, setPrefix] = useState("");
-  const [isCommitting, setIsCommitting] = useState(false);
-  const [showPrefixInput, setShowPrefixInput] = useState(false);
-  const [currentSetIndex, setCurrentSetIndex] = useState(0);
+type View = "select" | "edit" | "prefix" | "committing";
 
-  const handleSelect = (index: number) => {
-    setSelected(index);
-    setIsCommitting(true);
+const InteractiveDemo: React.FC = () => {
+  const [view, setView] = useState<View>("select");
+  const [messages, setMessages] = useState(commitSets[0]);
+  const [prefix, setPrefix] = useState("");
+  const [prefixInput, setPrefixInput] = useState("");
+  const [commitMessage, setCommitMessage] = useState("");
+  const [currentSetIndex, setCurrentSetIndex] = useState(0);
+  const [hoverIndex, setHoverIndex] = useState(0);
+  const [editingMessage, setEditingMessage] = useState("");
+  const inputRef = useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    if ((view === "edit" || view === "prefix") && inputRef.current) {
+      inputRef.current.focus();
+    }
+  }, [view]);
+
+  const resetToSelect = () => {
+    setHoverIndex(0);
+    setView("select");
+  };
+
+  const handleCommit = (message: string) => {
+    if (!message.trim()) {
+      resetToSelect();
+      return;
+    }
+    setCommitMessage(message);
+    setView("committing");
+
     setTimeout(() => {
-      setIsCommitting(false);
-      setSelected(null);
-      handleRegenerate(); // Move to next set after "commit"
+      const nextIndex = (currentSetIndex + 1) % commitSets.length;
+      setCurrentSetIndex(nextIndex);
+      setMessages(commitSets[nextIndex]);
+      setCommitMessage("");
+      resetToSelect();
     }, 2000);
   };
 
-  const handleRegenerate = () => {
-    const nextIndex = (currentSetIndex + 1) % commitSets.length;
-    setCurrentSetIndex(nextIndex);
-    setMessages(commitSets[nextIndex]);
-    setSelected(null);
+  const handleAction = (index: number) => {
+    setHoverIndex(index); // Set active selection
+    if (index < messages.length) {
+      // A commit message is selected
+      setEditingMessage(prefix + messages[index].text);
+      setView("edit");
+    } else if (index === messages.length) {
+      // Regenerate
+      const nextIndex = (currentSetIndex + 1) % commitSets.length;
+      setCurrentSetIndex(nextIndex);
+      setMessages(commitSets[nextIndex]);
+      resetToSelect();
+    } else if (index === messages.length + 1) {
+      // Set Prefix
+      setPrefixInput(prefix);
+      setView("prefix");
+    } else if (index === messages.length + 2) {
+      // Quit
+      // In a real app this would exit, here we just cycle to next example.
+      const nextIndex = (currentSetIndex + 1) % commitSets.length;
+      setCurrentSetIndex(nextIndex);
+      setMessages(commitSets[nextIndex]);
+      setPrefix(""); // Reset prefix on "quit"
+      resetToSelect();
+    }
   };
 
-  const handleSetPrefix = () => {
-    setShowPrefixInput(true);
+  const handleEditSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    handleCommit(editingMessage);
   };
 
-  const handlePrefixChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setPrefix(e.target.value);
+  const handleCancelEdit = () => {
+    resetToSelect();
   };
 
   const handlePrefixSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    setShowPrefixInput(false);
+    let newPrefix = prefixInput.trim();
+    if (newPrefix && !newPrefix.endsWith(" ") && !newPrefix.endsWith(":")) {
+      newPrefix += ": ";
+    }
+    setPrefix(newPrefix);
+    resetToSelect();
+  };
+
+  const renderContent = () => {
+    if (view === "committing") {
+      return (
+        <div className="text-panda-green transition-opacity duration-500">
+          <p>Committing with message:</p>
+          <p className="mt-2 bg-panda-green/20 p-2 rounded">{commitMessage}</p>
+        </div>
+      );
+    }
+
+    if (view === "edit") {
+      return (
+        <form onSubmit={handleEditSubmit}>
+          <p className="text-white mb-2">
+            <span className="text-panda-pink-light">?</span> Edit commit
+            message:
+            <span className="text-panda-fg-muted">
+              {" "}
+              (Enter to commit, Ctrl+C to cancel)
+            </span>
+          </p>
+          <div className="flex items-center">
+            <span className="text-panda-pink-light mr-2">❯</span>
+            <input
+              ref={inputRef}
+              type="text"
+              value={editingMessage}
+              onChange={(e) => setEditingMessage(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.ctrlKey && e.key.toLowerCase() === "c") {
+                  e.preventDefault();
+                  handleCancelEdit();
+                }
+              }}
+              className="bg-transparent text-white focus:outline-none flex-grow"
+            />
+          </div>
+        </form>
+      );
+    }
+
+    if (view === "prefix") {
+      return (
+        <form onSubmit={handlePrefixSubmit}>
+          <p className="text-white mb-2">
+            <span className="text-panda-pink-light">?</span> Enter prefix (leave
+            empty to clear):
+            <span className="text-panda-fg-muted">
+              {" "}
+              (Enter to set, Ctrl+C to cancel)
+            </span>
+          </p>
+          <div className="flex items-center">
+            <span className="text-panda-pink-light mr-2">❯</span>
+            <input
+              ref={inputRef}
+              type="text"
+              value={prefixInput}
+              onChange={(e) => setPrefixInput(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.ctrlKey && e.key.toLowerCase() === "c") {
+                  e.preventDefault();
+                  resetToSelect();
+                }
+              }}
+              className="bg-transparent text-white focus:outline-none flex-grow"
+            />
+          </div>
+        </form>
+      );
+    }
+
+    const options = [
+      ...messages.map((msg, index) => ({
+        label: `${msg.status === "ok" ? "✓" : "⚠"} ${index + 1}. ${prefix}${
+          msg.text
+        }`,
+        hint: `(${(prefix + msg.text).length} chars)`,
+      })),
+      { label: "↻ Regenerate new options", hint: "(r)" },
+      { label: "✎ Set/change prefix", hint: "(p)" },
+      { label: "✕ Quit without committing", hint: "(q)" },
+    ];
+
+    return (
+      <div>
+        <p className="text-white">
+          <span className="text-panda-pink-light">◇</span>{" "}
+          <span className="font-bold">Choose a commit message:</span>
+        </p>
+        <ul
+          className="mt-2"
+          onMouseLeave={() => setHoverIndex(hoverIndex)}
+        >
+          {options.map((opt, index) => {
+            const isSelected = hoverIndex === index;
+            const isMessage = index < messages.length;
+            const isRegen = index === messages.length;
+            const isPrefix = index === messages.length + 1;
+            const isQuit = index === messages.length + 2;
+
+            let colorClass = isSelected
+              ? "text-panda-pink-light"
+              : "text-panda-fg-dim";
+            if (isMessage)
+              colorClass = isSelected ? "text-white" : "text-panda-fg";
+            if (isRegen)
+              colorClass = isSelected
+                ? "text-panda-pink-light"
+                : "text-panda-fg-dim";
+            if (isPrefix)
+              colorClass = isSelected
+                ? "text-panda-purple-light"
+                : "text-panda-fg-dim";
+            if (isQuit)
+              colorClass = isSelected ? "text-panda-red" : "text-panda-fg-dim";
+
+            return (
+              <li
+                key={index}
+                onClick={() => handleAction(index)}
+                onMouseEnter={() => setHoverIndex(index)}
+                className="flex items-center cursor-pointer p-0.5 rounded"
+              >
+                <span
+                  className={`w-4 mr-2 text-center ${
+                    isSelected ? "text-panda-pink-light" : ""
+                  }`}
+                >
+                  {isSelected ? "❯" : " "}
+                </span>
+                <span
+                  className={`${colorClass} transition-colors duration-100`}
+                >
+                  {opt.label}
+                </span>
+                <span className="text-panda-fg-muted ml-auto pl-4">
+                  {opt.hint}
+                </span>
+              </li>
+            );
+          })}
+        </ul>
+        <p className="mt-4 text-panda-fg-muted">
+          Use ↑/↓, Enter, or shortcuts (1-3, r, p, q)
+        </p>
+      </div>
+    );
   };
 
   return (
@@ -107,100 +306,12 @@ const InteractiveDemo: React.FC = () => {
             </div>
             <span className="ml-4 text-sm text-panda-fg-dim">bash</span>
           </div>
-          <div className="p-6 font-mono text-sm">
+          <div className="p-6 font-mono text-sm min-h-[320px]">
             <div className="flex items-center">
               <span className="text-panda-pink-light mr-2">$</span>
               <span className="text-white">gac</span>
             </div>
-            <div className="mt-4">
-              {isCommitting ? (
-                <div className="text-panda-green transition-opacity duration-500">
-                  <p>Committing with message:</p>
-                  <p className="mt-2 bg-panda-green/20 p-2 rounded">
-                    {prefix}
-                    {messages[selected!].text}
-                  </p>
-                </div>
-              ) : (
-                <div>
-                  <p className="text-white">? Choose a commit message:</p>
-                  <ul className="mt-2 space-y-1">
-                    {messages.map((msg, index) => (
-                      <li
-                        key={index}
-                        onClick={() => handleSelect(index)}
-                        className="group flex items-center cursor-pointer p-1 rounded hover:bg-panda-border/50"
-                      >
-                        {msg.status === "ok" ? (
-                          <span className="text-panda-green mr-3">✓</span>
-                        ) : (
-                          <span className="text-panda-lavender mr-3">⚠</span>
-                        )}
-                        <span className="text-white mr-2">{index + 1}.</span>
-                        <span className="text-panda-fg group-hover:text-white">
-                          {prefix}
-                          {msg.text}
-                        </span>
-                        <span className="text-panda-fg-muted ml-auto pl-4">
-                          ({msg.len} chars)
-                        </span>
-                      </li>
-                    ))}
-                  </ul>
-                  <ul className="mt-4 space-y-1">
-                    <li
-                      onClick={handleRegenerate}
-                      className="group flex items-center cursor-pointer p-1 rounded hover:bg-panda-border/50"
-                    >
-                      <span className="text-panda-pink-light mr-3">↻</span>
-                      <span className="text-panda-fg group-hover:text-white">
-                        Regenerate new options{" "}
-                        <span className="text-panda-fg-muted">(r)</span>
-                      </span>
-                    </li>
-                    <li
-                      onClick={handleSetPrefix}
-                      className="group flex items-center cursor-pointer p-1 rounded hover:bg-panda-border/50"
-                    >
-                      <span className="text-panda-pink-light mr-3">✎</span>
-                      <span className="text-panda-fg group-hover:text-white">
-                        Set/change prefix{" "}
-                        <span className="text-panda-fg-muted">(p)</span>
-                      </span>
-                    </li>
-                    <li className="group flex items-center p-1 rounded">
-                      <span className="text-panda-red mr-3">✕</span>
-                      <span className="text-panda-fg">
-                        Quit without committing{" "}
-                        <span className="text-panda-fg-muted">(q)</span>
-                      </span>
-                    </li>
-                  </ul>
-                  {showPrefixInput && (
-                    <form
-                      onSubmit={handlePrefixSubmit}
-                      className="mt-4 flex items-center"
-                    >
-                      <label
-                        htmlFor="prefix-input"
-                        className="text-white mr-2"
-                      >
-                        Enter prefix:
-                      </label>
-                      <input
-                        id="prefix-input"
-                        type="text"
-                        value={prefix}
-                        onChange={handlePrefixChange}
-                        className="bg-panda-border text-white px-2 py-1 rounded focus:outline-none focus:ring-2 focus:ring-panda-pink flex-grow"
-                        autoFocus
-                        onBlur={() => setShowPrefixInput(false)}
-                      />
-                    </form>
-                  )}
-                </div>
-              )}
-            </div>
+            <div className="mt-4">{renderContent()}</div>
           </div>
         </div>
       </div>
