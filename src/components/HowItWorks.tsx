@@ -31,6 +31,10 @@ const HowItWorks: React.FC = () => {
               code="git add ."
               language="bash"
             />
+            <p className="mt-3 text-sm text-panda-fg-muted">
+              Tip: Skip this for tracked files with{" "}
+              <code className="text-panda-pink-light">gac -a</code>
+            </p>
           </div>
           <div className="p-6">
             <div className="text-4xl font-bold text-panda-pink-light mb-4">
@@ -44,6 +48,10 @@ const HowItWorks: React.FC = () => {
               code="gac"
               language="bash"
             />
+            <p className="mt-3 text-sm text-panda-fg-muted">
+              Use <code className="text-panda-pink-light">gac -a</code> to stage
+              & generate
+            </p>
           </div>
           <div className="p-6">
             <div className="text-4xl font-bold text-panda-pink-light mb-4">

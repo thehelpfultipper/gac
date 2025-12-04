@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import CodeBlock from "./CodeBlock";
 
-type ConfigType = "gacrc" | "packagejson";
+type ConfigType = "gacrc" | "packagejson" | "gacignore";
 
 const configExamples = {
   gacrc: `{
@@ -20,11 +20,23 @@ const configExamples = {
     "engine": "ollama"
   }
 }`,
+  gacignore: `# Lock files (tracked, but huge and noisy for AI)
+package-lock.json
+yarn.lock
+pnpm-lock.yaml
+
+# Auto-generated source files
+src/gql/types.ts
+src/aws-exports.js
+
+# Minified assets (if you commit them)
+public/js/*.min.js`,
 };
 
 const fileNames = {
   gacrc: ".gacrc",
   packagejson: "package.json",
+  gacignore: ".gacignore",
 };
 
 const Configuration: React.FC = () => {
@@ -41,6 +53,11 @@ const Configuration: React.FC = () => {
             Configure once, then forget about it. Settings are loaded from your
             project.
           </p>
+          <div className="mt-4 inline-flex items-center rounded-md bg-panda-bg-light px-3 py-2 text-sm font-medium text-panda-pink-light ring-1 ring-inset ring-panda-pink/20">
+            💡 Tip: Run{" "}
+            <code className="mx-1 font-mono text-white">gac init</code>{" "}
+            to generate the .gacrc file interactively!
+          </div>
         </div>
         <div className="flex justify-center mb-2 border-b border-panda-border">
           {(Object.keys(configExamples) as ConfigType[]).map((config) => (
@@ -62,7 +79,7 @@ const Configuration: React.FC = () => {
             {fileNames[activeConfig]}
           </p>
           <CodeBlock
-            language="json"
+            language={activeConfig === "gacignore" ? "text" : "json"}
             code={configExamples[activeConfig]}
           />
         </div>

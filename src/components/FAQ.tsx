@@ -74,6 +74,23 @@ const FAQ: React.FC = () => {
               </li>
             </ul>
           </FAQItem>
+          <FAQItem question="When should I use .gacignore?">
+            <p>
+              <code className="bg-panda-bg-light px-1 rounded">gac</code> only
+              analyzes <strong>staged</strong> files. If a file is in{" "}
+              <code className="bg-panda-bg-light px-1 rounded">.gitignore</code>
+              , it cannot be staged, so{" "}
+              <code className="bg-panda-bg-light px-1 rounded">gac</code> won't
+              see it anyway.
+            </p>
+            <p className="mt-2">
+              You only need{" "}
+              <code className="bg-panda-bg-light px-1 rounded">.gacignore</code>{" "}
+              for files that <strong>are tracked by Git</strong> (and currently
+              staged) but contain "noise" you don't want the AI to process, such
+              as large lockfiles or auto-generated source code.
+            </p>
+          </FAQItem>
           <FAQItem question="Messages are too long">
             <ul className="list-disc pl-5 space-y-2">
               <li>
